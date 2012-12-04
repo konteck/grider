@@ -1,0 +1,5 @@
+{
+    "mongodb_uri": "mongodb://127.0.0.1:27017/CDN",
+    "zeromq_uri": "tcp://0.0.0.0:4000",
+    "zeromq_workers": "auto"
+}
