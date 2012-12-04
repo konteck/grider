@@ -3,7 +3,6 @@
 #include <Magick++.h>
 #include "zmq.hpp"
 #include "picojson.h"
-#include "UriParser.hpp"
 #include "md5.h"
 #include "web++.hpp"
 
@@ -86,16 +85,15 @@ long SaveToGrid(DBClientConnection* con, string db, char* data, int size, string
 
 void* doWork(void* ctx) {
     double start;
-    std::string haystack = CONFIG["mongodb_uri"].to_str();
-    http::url parsed = http::ParseHttpUrl(haystack);
 
-    string db = parsed.path.substr(1);
+    string mongo_host = CONFIG["mongodb"].get<object>()["host"].to_str();
+    string mongo_port = CONFIG["mongodb"].get<object>()["port"].to_str();
+    string mongo_db = CONFIG["mongodb"].get<object>()["db"].to_str();
+    string mongo_collection = CONFIG["mongodb"].get<object>()["collection"].to_str();
 
-    std::ostringstream conn;
-    conn << parsed.host << ":" << parsed.port;
+    DBClientConnection mongo_conn;
+    mongo_conn.connect(mongo_host + ":" + mongo_port);
 
-    DBClientConnection con;
-    con.connect(conn.str());
     zmq::context_t* context = reinterpret_cast<zmq::context_t*>(ctx);
     zmq::socket_t socket(*context, ZMQ_REP);
     socket.connect("inproc://workers");
@@ -124,7 +122,7 @@ void* doWork(void* ctx) {
             }
 
             std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-            long id = SaveToGrid(&con, db, (char*) request.data(), request.size(), type);
+            long id = SaveToGrid(&mongo_conn, mongo_db, (char*) request.data(), request.size(), type);
 
             if(!id) {
                 throw string("Duplicate photo");
@@ -195,48 +193,21 @@ void* doWork(void* ctx) {
     zmq_close(socket);
 }
 
-void* run(void* arg) {
-    // Config
-    ifstream infile;
-    infile.open ("/etc/grider.json", ifstream::in);
-
-    if(!infile.is_open()) {
-        infile.open ("./grider.json", ifstream::in);
-
-        if(!infile.is_open()) {
-            std::cerr << "CONFIG: Unable to find 'grider.json' file!" << std::endl;
-
-//            return;
-        }
-    }
-
-    value v;
-    infile >> v;
-
-    std::string err = get_last_error();
-
-    if (!err.empty()) {
-      std::cerr << "grider.json: " << err << std::endl;
-
-//      return;
-    }
-
-    CONFIG = v.get<object>();
-
+void start_queue(string uri, string workers_count) {
     try {
         zmq::context_t context(1);
         zmq::socket_t clients(context, ZMQ_ROUTER);
-        clients.bind(CONFIG["zeromq_uri"].to_str().c_str());
+        clients.bind(uri.c_str());
 
         zmq::socket_t workers(context, ZMQ_DEALER);
         workers.bind("inproc://workers");
 
         int WORKERS_COUNT;
 
-        if(CONFIG["zeromq_workers"].to_str() == "auto") {
+        if(workers_count == "auto") {
              WORKERS_COUNT = sysconf(_SC_NPROCESSORS_ONLN); // numCPU
         } else {
-             WORKERS_COUNT = atoi(CONFIG["zeromq_workers"].to_str().c_str());
+             WORKERS_COUNT = atoi(workers_count.c_str());
         }
 
         pthread_t worker;
@@ -290,6 +261,39 @@ void* run(void* arg) {
     catch(const zmq::error_t& e) {
        cerr << "ZeroMQ: " << e.what() << endl;
     }
+}
+
+void* run(void* arg) {
+    // Config
+    ifstream infile;
+    infile.open ("/etc/grider.json", ifstream::in);
+
+    if(!infile.is_open()) {
+        infile.open ("./grider.json", ifstream::in);
+
+        if(!infile.is_open()) {
+            std::cerr << "CONFIG: Unable to find 'grider.json' file!" << std::endl;
+
+//            return;
+        }
+    }
+
+    value v;
+    infile >> v;
+
+    std::string err = get_last_error();
+
+    if (!err.empty()) {
+      std::cerr << "grider.json: " << err << std::endl;
+
+//      return;
+    }
+
+    CONFIG = v.get<object>();
+
+    string uri = CONFIG["zeromq"].get<object>()["uri"].to_str();
+    string workers_count = CONFIG["zeromq"].get<object>()["workers_count"].to_str();
+    start_queue(uri, workers_count);
 }
 
 void web_interface(WPP::Request* req, WPP::Response* res) {
