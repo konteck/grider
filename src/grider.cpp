@@ -181,6 +181,8 @@ void* doWork(void* ctx) {
             cerr << log.str() << endl;
 
             LOGS.push_back(log.str());
+        } catch (Magick::Exception & e) {
+            cerr << "Magick++: " << e.what() << endl;
         } catch(const zmq::error_t& e) {
             cerr << "ZeroMQ Worker: " << e.what() << endl;
         } catch(const mongo::DBException &e) {
