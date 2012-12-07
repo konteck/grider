@@ -14,5 +14,7 @@
 
 .idea
 *.iml
+*.xcodeproj
 .svn
 grider
+Debug
