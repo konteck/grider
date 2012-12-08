@@ -57,19 +57,35 @@ string md5(char* data, int len) {
 }
 
 long SaveToGrid(DBClientConnection* con, string db, char* data, int size, string type) {
+//    long id;
+//    BSONObj query;
+//    
+//    query = BSON("md5" << md5(data, size) << "uploadDate" << BSONObjBuilder().appendDate("$gt", time(0) * 1000 - 900 * 1000).obj());
+//    
+//    if(!con->findOne(db + ".fs.files", Query(query)).isEmpty()) return 0;
+//    
+//    while(true) {
+//        id = random(1000000000, 90000000000);
+//        
+//        query = BSON("'metadata.id'" << (unsigned int)id);
+//        
+//        if(con->findOne(db + ".fs.files", Query(query)).isEmpty()) break;
+//    }
+//    
     long id;
-    BSONObj query;
-    
-    query = BSON("md5" << md5(data, size) << "uploadDate" << BSONObjBuilder().appendDate("$gt", time(0) * 1000 - 900 * 1000).obj());
-    
-    if(!con->findOne(db + ".fs.files", Query(query)).isEmpty()) return 0;
+
+    stringstream q;
+    q << "{'md5': '" << md5(data, size) << "'}";
+
+    if(!con->findOne(db + ".fs.files", Query(q.str())).isEmpty()) return 0;
 
     while(true) {
         id = random(1000000000, 90000000000);
-        
-        query = BSON("'metadata.id'" << (unsigned int)id);
 
-        if(con->findOne(db + ".fs.files", Query(query)).isEmpty()) break;
+        stringstream q;
+        q << "{'metadata.id': " << id << "}";
+
+        if(con->findOne(db + ".fs.files", Query(q.str())).isEmpty()) break;
     }
 
     stringstream name;
