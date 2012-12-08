@@ -60,7 +60,7 @@ long SaveToGrid(DBClientConnection* con, string db, char* data, int size, string
     long id;
 
     stringstream q;
-    q << "{'md5': '" << md5(data, size) << "', uploadDate: {$gt: new Date(new Date().getTime() - 900 * 1000)}}";
+    q << "{'md5': '" << md5(data, size) << "'}";
 
     if(!con->findOne(db + ".fs.files", Query(q.str())).isEmpty()) return 0;
 
