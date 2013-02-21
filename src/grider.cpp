@@ -305,6 +305,7 @@ void* run(void* arg) {
 int main(int argc, const char* argv[]) {
     Magick::InitializeMagick(*argv);
 
+    
     run(NULL);
 
 //    try {
