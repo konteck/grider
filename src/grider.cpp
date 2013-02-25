@@ -44,7 +44,7 @@ long random(long min, long max) // range : [min, max]
     timeval time;
     gettimeofday(&time, NULL);
 
-    srand((time.tv_sec * 1000) + (time.tv_usec / 1000));
+    srand(((unsigned int)time.tv_sec * 1000) + (time.tv_usec / 1000));
     return ((min) + rand()/(RAND_MAX + 1.0) * ((max) - (min) + 1));
     //return rand() % (max - min) + min;
 }
@@ -54,7 +54,7 @@ string md5(char* data, unsigned long len) {
      md5_byte_t digest[16];
 
      md5_init(&state);
-     md5_append(&state, (const md5_byte_t*)data, len);
+     md5_append(&state, (const md5_byte_t*)data, (int)len);
      md5_finish(&state, digest);
 
      std::string callid_digest((const char*)digest, 16);
@@ -211,6 +211,8 @@ void* ThreadWorker(void* args) {
     msg->socket->send(msg_header, ZMQ_SNDMORE);
     msg->socket->send(msg_body, 0);
     
+    delete msg;
+    
     return NULL;
 }
 
@@ -281,7 +283,7 @@ void* run(void* arg) {
         cerr << "MainThread Exception: " << e.what() << endl;
     }
     catch (...) {
-        cout << "MainThread Exception" << endl;
+        cerr << "MainThread Exception" << endl;
     }
     
     zmq_close(socket);
