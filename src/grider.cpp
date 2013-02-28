@@ -95,7 +95,7 @@ long SaveToGrid(char* data, unsigned long size, string type) {
     GridFS gridFS = GridFS(mongo_conn, mongo_db, "fs");
 
     gridFS.storeFile(data, size, name.str(), "image/" + type);
-
+    
     return id;
 }
 
@@ -126,11 +126,11 @@ void* ThreadWorker(void* args) {
         name << id << "." << type;
         
         // Response back
-        response.insert(std::make_pair ("status", * new value("success")));
-        response.insert(std::make_pair ("id", * new value((double)id)));
-        response.insert(std::make_pair ("filename", * new value(name.str())));
-        response.insert(std::make_pair ("width", * new value(width)));
-        response.insert(std::make_pair ("height", * new value(height)));
+        response.insert(std::make_pair ("status", "success"));
+        response.insert(std::make_pair ("id", (double)id));
+        response.insert(std::make_pair ("filename", name.str()));
+        response.insert(std::make_pair ("width", width));
+        response.insert(std::make_pair ("height", height));
         
         // Log
         time_t now = time(0);
@@ -140,8 +140,8 @@ void* ThreadWorker(void* args) {
         << name.str() << " " << msg->body_size / 1024 << "kb " << width << "x" << height
         << " \t" << timer(start) << "s";
     } catch(string e) {
-        response.insert(std::make_pair ("status", * new value("error")));
-        response.insert(std::make_pair ("message", * new value(e)));
+        response.insert(std::make_pair ("status", "error"));
+        response.insert(std::make_pair ("message", e));
         
         // Log
         time_t now = time(0);
@@ -151,8 +151,8 @@ void* ThreadWorker(void* args) {
         << e
         << " \t" << timer(start) << "s";
     } catch (Magick::Exception & e) {
-        response.insert(std::make_pair ("status", * new value("error")));
-        response.insert(std::make_pair ("message", * new value(e.what())));
+        response.insert(std::make_pair ("status", "error"));
+        response.insert(std::make_pair ("message", e.what()));
         
         // Log
         time_t now = time(0);
@@ -162,8 +162,8 @@ void* ThreadWorker(void* args) {
         << "Magick++: " << e.what()
         << " \t" << timer(start) << "s";
     } catch(const zmq::error_t& e) {
-        response.insert(std::make_pair ("status", * new value("error")));
-        response.insert(std::make_pair ("message", * new value(e.what())));
+        response.insert(std::make_pair ("status", "error"));
+        response.insert(std::make_pair ("message", e.what()));
         
         // Log
         time_t now = time(0);
@@ -173,8 +173,8 @@ void* ThreadWorker(void* args) {
         << "ZeroMQ Worker: " << e.what()
         << " \t" << timer(start) << "s";
     } catch(const mongo::DBException &e) {
-        response.insert(std::make_pair ("status", * new value("error")));
-        response.insert(std::make_pair ("message", * new value(e.what())));
+        response.insert(std::make_pair ("status", "error"));
+        response.insert(std::make_pair ("message", e.what()));
         
         // Log
         time_t now = time(0);
@@ -184,8 +184,8 @@ void* ThreadWorker(void* args) {
         << "MongoDB: " << e.what()
         << " \t" << timer(start) << "s";
     } catch(exception& e) {
-        response.insert(std::make_pair ("status", * new value("error")));
-        response.insert(std::make_pair ("message", * new value(e.what())));
+        response.insert(std::make_pair ("status", "error"));
+        response.insert(std::make_pair ("message", e.what()));
         
         // Log
         time_t now = time(0);
@@ -199,7 +199,7 @@ void* ThreadWorker(void* args) {
     cout << log.str() << endl;
     
     //LOGS.push_back(log.str());
-    
+           
     zmq::message_t msg_header(msg->header_size);
     memcpy(msg_header.data(), (char*)msg->header, msg->header_size);
     
@@ -272,8 +272,6 @@ void* run(void* arg) {
             memcpy(msg.body, (char*) request.data(), request.size());
             
             pthread_create(&workers, NULL, &ThreadWorker, new MessageBlock(msg));
-            
-            usleep(4 * 1000);
         }
     }
     catch(const zmq::error_t& e) {
