@@ -81,7 +81,7 @@ long SaveToGrid(char* data, unsigned long size, string type) {
     if(!mongo_conn.findOne(mongo_db + ".fs.files", Query(query)).isEmpty()) return 0;
 
     while(true) {
-        id = random(1000000000, 90000000000);
+        id = random(100000000, 9000000000);
 
         stringstream q;
         q << "{'metadata.id': " << id << "}";
@@ -304,7 +304,6 @@ void* run(void* arg) {
 
 int main(int argc, const char* argv[]) {
     Magick::InitializeMagick(*argv);
-
     
     run(NULL);
 
