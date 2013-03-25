@@ -51,10 +51,13 @@ long random(long min, long max) // range : [min, max]
 
 long gen_random(const int len) {
     char *s = new char;
-    static const char alphanum[] = "0123456789";
+    static const char start_range[] = "123456789";
+    static const char end_range[] = "0123456789";
     
-    for (int i = 0; i < len; ++i) {
-        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    s[0] = start_range[rand() % (sizeof(start_range) - 1)];
+    
+    for (int i = 1; i < len; ++i) {
+        s[i] = end_range[rand() % (sizeof(end_range) - 1)];
     }
     
     long num = atol(s);
