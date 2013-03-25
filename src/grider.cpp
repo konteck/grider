@@ -45,8 +45,23 @@ long random(long min, long max) // range : [min, max]
     gettimeofday(&time, NULL);
 
     srand(((unsigned int)time.tv_sec * 1000) + (time.tv_usec / 1000));
-    return ((min) + rand()/(RAND_MAX + 1.0) * ((max) - (min) + 1));
-    //return rand() % (max - min) + min;
+    
+    return rand() % (max - min) + min;
+}
+
+long gen_random(const int len) {
+    char *s = new char;
+    static const char alphanum[] = "0123456789";
+    
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+    
+    long num = atol(s);
+    
+    delete s;
+    
+    return num;
 }
 
 string md5(char* data, unsigned long len) {
@@ -81,7 +96,7 @@ long SaveToGrid(char* data, unsigned long size, string type) {
     if(!mongo_conn.findOne(mongo_db + ".fs.files", Query(query)).isEmpty()) return 0;
 
     while(true) {
-        id = random(100000000, 9000000000);
+        id = gen_random(10);
 
         stringstream q;
         q << "{'metadata.id': " << id << "}";
@@ -302,11 +317,13 @@ void* run(void* arg) {
 //    res->body << resp.serialize().c_str();
 //}
 
+
+
 int main(int argc, const char* argv[]) {
     Magick::InitializeMagick(*argv);
     
     run(NULL);
-
+    
 //    try {
 //        WPP::Server server;
 //        server.get("/", &web_interface);
