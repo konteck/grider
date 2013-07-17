@@ -99,7 +99,7 @@ long SaveToGrid(char* data, unsigned long size, string type) {
     if(!mongo_conn.findOne(mongo_db + ".fs.files", Query(query)).isEmpty()) return 0;
 
     while(true) {
-        id = gen_random(10);
+        id = gen_random(11);
 
         stringstream q;
         q << "{'metadata.id': " << id << "}";
