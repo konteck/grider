@@ -95,8 +95,13 @@ long SaveToGrid(char* data, unsigned long size, string type) {
     //q << "{'md5': '" << md5(data, size) << "'}";
     
     BSONObj query = BSON("md5" << md5(data, size) << "uploadDate" << BSONObjBuilder().appendDate("$gt", time(0) * 1000 - 900 * 1000).obj());
-    
-    if(!mongo_conn.findOne(mongo_db + ".fs.files", Query(query)).isEmpty()) return 0;
+    BSONObj obj = mongo_conn.findOne(mongo_db + ".fs.files", Query(query));
+
+    if(!obj.isEmpty()) {
+        cout << "Duplicate photo: " << obj.toString() << endl;
+
+        return 0;
+    }
 
     while(true) {
         id = gen_random(11);
