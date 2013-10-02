@@ -127,17 +127,28 @@ void* ThreadWorker(void* args) {
     object response;
     double start = timer();
     MessageBlock* msg = (MessageBlock*)args;
+    double width;
+    double height;
+    string type;
         
     try {
         Magick::Blob b((char*)msg->body, msg->body_size);
         Magick::Image img(b);
-        
-        double width = img.columns(); double height = img.rows(); string type = img.magick();
-        
-        if(width == 0 || height == 0) {
-            throw string("Image format incorrect");
+
+        try {
+            width = img.columns(); height = img.rows(); type = img.magick();
+
+            if(width == 0 || height == 0) {
+             throw string("Image format incorrect");
+            }
+        } catch (Magick::Exception & e) {
+            type = 'pack';
+
+            log << "[" << ltm->tm_hour << ":" << ltm->tm_min << ":" << ltm->tm_sec << " " << ltm->tm_mday << "/" << ltm->tm_mon << "] \t"
+            << "Design upload: " << e.what()
+            << " \t" << timer(start) << "s";
         }
-        
+
         std::transform(type.begin(), type.end(), type.begin(), ::tolower);
         long id = SaveToGrid((char*)msg->body, msg->body_size, type);
         
