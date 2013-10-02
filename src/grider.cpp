@@ -142,11 +142,7 @@ void* ThreadWorker(void* args) {
              throw string("Image format incorrect");
             }
         } catch (Magick::Exception & e) {
-            type = 'pack';
-
-            log << "[" << ltm->tm_hour << ":" << ltm->tm_min << ":" << ltm->tm_sec << " " << ltm->tm_mday << "/" << ltm->tm_mon << "] \t"
-            << "Design upload: " << e.what()
-            << " \t" << timer(start) << "s";
+            type = "pack";
         }
 
         std::transform(type.begin(), type.end(), type.begin(), ::tolower);
