@@ -15,3 +15,6 @@ cd zeromq-*;
 make install;
 ldconfig;cd ..;
 rm -Rf zeromq.tgz zeromq-*
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/konteck/grider/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
